@@ -6,6 +6,7 @@ import java.security.*
 import java.security.cert.CertificateException
 import javax.crypto.Cipher
 import javax.crypto.NoSuchPaddingException
+import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.IvParameterSpec
 
 /**
@@ -46,7 +47,11 @@ abstract class BaseCryptore(
         createKeystoreAliasIfNeeded()
         val decryptKey = getDecryptKey(keyStore = keyStore, alias = alias)
         cipherIV?.let {
-            cipher.init(Cipher.DECRYPT_MODE, decryptKey, IvParameterSpec(cipherIV))
+            if (blockMode == BlockMode.GCM) {
+                cipher.init(Cipher.DECRYPT_MODE, decryptKey, GCMParameterSpec(128, cipherIV))
+            } else {
+                cipher.init(Cipher.DECRYPT_MODE, decryptKey, IvParameterSpec(cipherIV))
+            }
         } ?: run {
             cipher.init(Cipher.DECRYPT_MODE, decryptKey)
         }
